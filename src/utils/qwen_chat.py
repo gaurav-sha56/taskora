@@ -11,6 +11,7 @@ Run with uv:
   uv run qwen_chat.py            # Default: 16-bit (FP16)
   uv run qwen_chat.py --bab=8    # 8-bit (Q8_0)
   uv run qwen_chat.py --bab=4    # 4-bit (Q4_K_M)
+  uv run python qwen_chat.py     # use this if any module not found error exists use the quantization as possible
 """
 
 import argparse
@@ -74,8 +75,10 @@ def main():
     asr = ASR()
     while True:
         try:
-            user_input = asr.get_text_from_mic()
-            print("YOU: " + user_input)
+            # uncomment the below two lines to start taking input from the mic
+            # user_input = asr.get_text_from_mic()
+            # print("YOU: " + user_input) 
+            user_input = input("YOU: ") # comment out this line to stop using text input
         except (EOFError, KeyboardInterrupt):
             print("\nBye!")
             break
