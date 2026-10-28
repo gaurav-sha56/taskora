@@ -1205,6 +1205,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "accelerate" },
+    { name = "ctranslate2" },
     { name = "dotenv" },
     { name = "faster-whisper" },
     { name = "huggingface-hub" },
@@ -1217,6 +1218,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "accelerate", specifier = ">=1.15.0" },
+    { name = "ctranslate2", specifier = ">=4.8.4" },
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "huggingface-hub", specifier = ">=2.3.0" },
