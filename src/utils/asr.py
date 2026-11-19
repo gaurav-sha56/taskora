@@ -7,11 +7,16 @@ import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
 
+try:
+    from evals import calculate_asr_metrics, print_asr_metrics
+except ImportError:
+    from src.utils.evals import calculate_asr_metrics, print_asr_metrics
+
 
 class ASR:
     # ---------------- Taskora Config ----------------
     TASKORA_PROMPT = (
-        "Taskora, VS Code, Chrome, Brave, GitHub, terminal, folder, volume, "
+        "Taskora, VS Code, Gaurav, Chrome, Brave, GitHub, terminal, folder, volume, "
         "brightness, Spotify, Python, screenshot, file, open, close, "
         "band kar do, khol do, chalu karo, kam karo, badhao."
     )
@@ -215,6 +220,7 @@ class ASR:
         if speech_frames < min_speech_frames:
             return np.array([], dtype="float32")
 
+        self.speech_stopped_time = time.perf_counter()
         print("🛑 Stopped listening.")
 
         return np.concatenate(recorded)
@@ -236,26 +242,36 @@ class ASR:
         ).strip()
 
     # ---------------- Main Microphone Interface ----------------
-    def get_text_from_mic(self) -> str:
+    def get_text_from_mic(self, get_metrics: bool = False):
         audio = self.record_until_silence()
+        speech_stopped_time = getattr(self, "speech_stopped_time", time.perf_counter())
 
         if audio.size == 0:
             print("Nothing to transcribe.")
-            return ""
+            empty_metrics = calculate_asr_metrics(
+                speech_duration_s=0.0,
+                transcription_time_s=0.0,
+                speech_stopped_time=speech_stopped_time,
+            )
+            return ("", empty_metrics) if get_metrics else ""
 
         print("Transcribing...")
 
+        speech_duration_s = len(audio) / self.SAMPLE_RATE
         start_time = time.perf_counter()
         text = self.transcribe_audio(audio)
+        transcription_time_s = time.perf_counter() - start_time
 
-        latency_ms = (
-            time.perf_counter() - start_time
-        ) * 1000
+        metrics = calculate_asr_metrics(
+            speech_duration_s=speech_duration_s,
+            transcription_time_s=transcription_time_s,
+            speech_stopped_time=speech_stopped_time,
+        )
 
-        print(f"\n--- Transcription ({latency_ms:.0f} ms) ---")
-        print(text)
-        print("-----------------------------------")
+        print_asr_metrics(metrics, text)
 
+        if get_metrics:
+            return text, metrics
         return text
 
 
